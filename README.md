@@ -1,50 +1,87 @@
-# Welcome to your Expo app 👋
+# 🎮 Colete os Orbes
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Um jogo mobile divertido e desafiador desenvolvido em React Native com Expo, onde você controla uma bolinha usando o giroscópio do dispositivo para coletar orbes e avançar de nível.
 
-## Get started
+## 🎯 Sobre o Jogo
 
-1. Install dependencies
+Colete os Orbes é um jogo de habilidade e estratégia onde você:
+- Controla uma bolinha usando o movimento do dispositivo
+- Coleta orbes azuis para avançar de nível
+- Enfrenta desafios progressivos a cada fase
+- Competa contra o tempo para obter a maior pontuação
 
-   ```bash
-   npm install
-   ```
+## ✨ Características
 
-2. Start the app
+### 🎮 Mecânicas de Jogo
+- **Controle por Giroscópio**: Movimente a bolinha inclinando o dispositivo
+- **Sistema de Níveis Progressivos**: Cada nível fica mais desafiador
+- **Tempo Limitado**: Complete os objetivos antes do tempo acabar
+- **Pontuação**: Ganhe pontos baseados no nível e coletas especiais
 
-   ```bash
-   npx expo start
-   ```
+### 📈 Progressão de Dificuldade
 
-In the output, you'll find options to open the app in a
+#### 🌟 Níveis 1-4
+- Coleta de orbes azuis básicos
+- Bolinha e orbes diminuem de tamanho gradualmente
+- Tempo limite reduzido a cada nível
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+#### ⚠️ Nível 5+
+- **Bolinhas Roxas Inimigas**: Encostar = Game Over
+- Inimigos caem mais rápido em níveis mais altos
+- Quantidade de inimigos aumenta progressivamente
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+#### ⏱️ Nível 8+
+- **Orbes Dourados de Tempo**: Colete para ganhar +5 segundos
+- **Penalidade de Bordas**: Encostar nas bordas = -2 segundos
+- Sistema de cooldown para evitar spam de penalidades
 
-## Get a fresh project
+### 🎨 Interface
+- Design limpo e intuitivo
+- Feedback visual imediato para ações
+- Tela de comemoração animada ao passar de nível
+- Barra de progresso para acompanhar as coletas
+- Legenda explicativa dos elementos do jogo
 
-When you're ready, run:
+## 🚀 Como Jogar
+
+1. **Início**: Toque em "Começar Jogo" na tela inicial
+2. **Controles**: Incline o dispositivo para mover a bolinha
+3. **Objetivo**: Colete todos os orbes azuis antes do tempo acabar
+4. **Avanço**: Complete a cota de orbes para passar de nível
+5. **Sobrevivência**: Evite bolinhas roxas e use estratégia nas bordas
+
+### 🎯 Dicas Estratégicas
+- **Níveis Iniciais**: Foque em aprender a sensibilidade dos controles
+- **Níveis 5+**: Mantenha-se no centro para evitar inimigos
+- **Níveis 8+**: Use as bordas com cuidado e priorize orbes de tempo
+- **Geral**: Movimentos suaves são mais eficientes que movimentos bruscos
+
+## 🛠️ Tecnologias Utilizadas
+
+- **React Native** - Framework mobile
+- **Expo** - Plataforma de desenvolvimento
+- **Expo Sensors** - Acesso ao giroscópio
+- **TypeScript** - Tipagem estática
+- **React Native Animated** - Animações suaves
+
+## 📋 Pré-requisitos
+
+- Node.js 14+
+- Expo CLI
+- Dispositivo mobile com giroscópio
+- iOS ou Android
+
+## 🔧 Instalação e Execução
 
 ```bash
-npm run reset-project
-```
+# Clone o repositório
+git clone [url-do-repositorio]
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# Entre no diretório
+cd ColeteOrbe
 
-## Learn more
+# Instale as dependências
+npm install
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Execute o projeto
+expo start
