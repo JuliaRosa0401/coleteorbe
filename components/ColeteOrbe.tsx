@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Dimensions, Text, TouchableOpacity, Modal, Animated, Image } from 'react-native';
 import { Gyroscope } from 'expo-sensors';
+import InfiniteScrollBackground from './InfiniteScrollBackground';
 
 const { width, height } = Dimensions.get('window');
 const BASE_PLAYER_SIZE = 80; 
@@ -14,6 +15,7 @@ const images = {
   nave: require('@/assets/nave.png'),
   meteoro: require('@/assets/meteoro.png'),
   star: require('@/assets/star.png'),
+  background: require('@/assets/galaxy-bg.png'),
 };
 
 // componente de Seleção de Modo e Nível
@@ -476,6 +478,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <InfiniteScrollBackground />
       <GameModeScreen 
         onStart={startGame} 
         isVisible={gameState === 'menu'} 
@@ -619,7 +622,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a2a', // Fundo azul escuro espacial
+    backgroundColor: 'transparent',
   },
   // Estilos da tela de seleção de modo
   modeContainer: {
