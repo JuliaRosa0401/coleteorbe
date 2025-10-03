@@ -1,32 +1,128 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Dimensions, Text, TouchableOpacity, Modal, Animated } from 'react-native';
+import { StyleSheet, View, Dimensions, Text, TouchableOpacity, Modal, Animated, Image } from 'react-native';
 import { Gyroscope } from 'expo-sensors';
 
 const { width, height } = Dimensions.get('window');
-const BASE_PLAYER_SIZE = 50;
-const BASE_ORB_SIZE = 30;
-const BASE_TIME_LIMIT = 30;
-const ORBS_PER_LEVEL = 5;
+const BASE_PLAYER_SIZE = 80; 
+const BASE_ORB_SIZE = 60;
+const BASE_TIME_LIMIT = 40;
+const ORBS_PER_LEVEL = 3;
 
-// Componente da Tela de Início
-const StartScreen = ({ onStart, isVisible }) => {
+// importe das imagens 
+const images = {
+  orbe: require('@/assets/orbe.png'),
+  nave: require('@/assets/nave.png'),
+  meteoro: require('@/assets/meteoro.png'),
+  star: require('@/assets/star.png'),
+};
+
+// componente de Seleção de Modo e Nível
+const GameModeScreen = ({ onStart, isVisible }) => {
+  const [selectedMode, setSelectedMode] = useState('infinite');
+  const [selectedLevel, setSelectedLevel] = useState(1);
+
+  const levels = [1, 5, 10];
+  
   return (
     <Modal visible={isVisible} animationType="fade" transparent={true}>
-      <View style={styles.startContainer}>
-        <View style={styles.startContent}>
-          <Text style={styles.title}>Colete os Orbes!</Text>
-          <Text style={styles.subtitle}>Use o giroscópio do seu dispositivo para mover a bolinha e coletar os orbes azuis</Text>
-          <Text style={styles.instructions}>
-            • Cada nível fica mais difícil{"\n"}
-            • A bolinha fica menor{"\n"}
-            • Mais orbes para coletar{"\n"}
-            • Fique atento ao tempo!{"\n"}
-            • ⚠️ Nível 5+: Bolinhas roxas fazem você perder!{"\n"}
-            • ⏱️ Nível 8+: Colete orbes dourados para ganhar tempo!{"\n"}
-            • 🚫 Nível 8+: Encostar nas bordas perde 2 segundos!
-          </Text>
-          <TouchableOpacity style={styles.startButton} onPress={onStart}>
-            <Text style={styles.startButtonText}>Começar Jogo</Text>
+      <View style={styles.modeContainer}>
+        <View style={styles.modeContent}>
+          <Text style={styles.title}>🌌 Missão Galáctica</Text>
+          <Text style={styles.subtitle}>Navegue pelo cosmos e colete energia estelar!</Text>
+          
+          {/* Seleção de Modo */}
+          <Text style={styles.sectionTitle}>Modo de Missão:</Text>
+          <View style={styles.modeButtons}>
+            <TouchableOpacity 
+              style={[
+                styles.modeButton, 
+                selectedMode === 'infinite' && styles.modeButtonSelected
+              ]}
+              onPress={() => setSelectedMode('infinite')}
+            >
+              <Text style={[
+                styles.modeButtonText,
+                selectedMode === 'infinite' && styles.modeButtonTextSelected
+              ]}>🚀 Missão Infinita</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.modeButton, 
+                selectedMode === 'level' && styles.modeButtonSelected
+              ]}
+              onPress={() => setSelectedMode('level')}
+            >
+              <Text style={[
+                styles.modeButtonText,
+                selectedMode === 'level' && styles.modeButtonTextSelected
+              ]}>🪐 Missão Específica</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Seleção de Nível */}
+          {selectedMode === 'level' && (
+            <>
+              <Text style={styles.sectionTitle}>Setor Galáctico:</Text>
+              <View style={styles.levelButtons}>
+                {levels.map(level => (
+                  <TouchableOpacity 
+                    key={level}
+                    style={[
+                      styles.levelButton,
+                      selectedLevel === level && styles.levelButtonSelected
+                    ]}
+                    onPress={() => setSelectedLevel(level)}
+                  >
+                    <Text style={[
+                      styles.levelButtonText,
+                      selectedLevel === level && styles.levelButtonTextSelected
+                    ]}>Setor {level}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
+          {/* Informações do modo selecionado */}
+          <View style={styles.modeInfo}>
+            {selectedMode === 'infinite' ? (
+              <Text style={styles.modeInfoText}>
+                • Explore o cosmos infinitamente{"\n"}
+                • Dificuldade aumenta progressivamente{"\n"}
+                • Alcance a maior pontuação cósmica!
+              </Text>
+            ) : (
+              <Text style={styles.modeInfoText}>
+                • Inicie no Setor {selectedLevel}{"\n"}
+                • Enfrente desafios específicos{"\n"}
+                • Perfeito para treinamento estelar!
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.legendIcons}>
+            <View style={styles.legendItem}>
+              <Image source={images.orbe} style={styles.legendIcon} />
+              <Text style={styles.legendText}>= Energia (+10 pts)</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <Image source={images.meteoro} style={styles.legendIcon} />
+              <Text style={styles.legendText}>= Meteoro (Perde)</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <Image source={images.star} style={styles.legendIcon} />
+              <Text style={styles.legendText}>= Estrela (+5s)</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.startButton} 
+            onPress={() => onStart(selectedMode, selectedLevel)}
+          >
+            <Text style={styles.startButtonText}>
+              {selectedMode === 'infinite' ? '🚀 Iniciar Missão' : `🪐 Iniciar Setor ${selectedLevel}`}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -34,18 +130,28 @@ const StartScreen = ({ onStart, isVisible }) => {
   );
 };
 
-// Componente de Game Over
-const GameOverScreen = ({ score, level, onRestart, isVisible }) => {
+// Componente de Game Over (atualizado)
+const GameOverScreen = ({ score, level, onRestart, onMenu, isVisible, gameMode }) => {
   return (
     <Modal visible={isVisible} animationType="fade" transparent={true}>
       <View style={styles.gameOverContainer}>
         <View style={styles.gameOverContent}>
-          <Text style={styles.gameOverTitle}>Fim de Jogo!</Text>
-          <Text style={styles.gameOverText}>Nível alcançado: {level}</Text>
-          <Text style={styles.gameOverText}>Pontuação: {score}</Text>
-          <TouchableOpacity style={styles.restartButton} onPress={onRestart}>
-            <Text style={styles.restartButtonText}>Jogar Novamente</Text>
-          </TouchableOpacity>
+          <Text style={styles.gameOverTitle}>🌠 Missão Concluída!</Text>
+          <Text style={styles.gameOverText}>Setor Alcançado: {level}</Text>
+          <Text style={styles.gameOverText}>Energia Coletada: {score}</Text>
+          <Text style={styles.gameOverSubtext}>
+            {gameMode === 'infinite' ? 'Missão Infinita' : `Setor ${level}`}
+          </Text>
+          
+          <View style={styles.gameOverButtons}>
+            <TouchableOpacity style={[styles.restartButton, styles.menuButton]} onPress={onRestart}>
+              <Text style={styles.restartButtonText}>🔄 Nova Missão</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.restartButton, styles.menuButton]} onPress={onMenu}>
+              <Text style={styles.restartButtonText}>🏠 Menu Principal</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -73,19 +179,19 @@ const LevelUpScreen = ({ level, onContinue, isVisible }) => {
     <Modal visible={isVisible} animationType="fade" transparent={true}>
       <View style={styles.levelUpContainer}>
         <Animated.View style={[styles.levelUpContent, { transform: [{ scale: scaleAnim }] }]}>
-          <Text style={styles.levelUpTitle}>🎉 Nível {level} 🎉</Text>
-          <Text style={styles.levelUpText}>Parabéns!</Text>
+          <Text style={styles.levelUpTitle}>🎉 Setor {level} 🎉</Text>
+          <Text style={styles.levelUpText}>Missão Cumprida!</Text>
           {level >= 5 && (
-            <Text style={styles.levelUpWarning}>⚠️ Cuidado com as bolinhas roxas!</Text>
+            <Text style={styles.levelUpWarning}>⚠️ Cuidado com os meteoros!</Text>
           )}
           {level >= 8 && (
             <>
-              <Text style={styles.levelUpBonus}>⏱️ Agora tem orbes de tempo!</Text>
-              <Text style={styles.levelUpWarning}>🚫 Encostar nas bordas perde 2 segundos!</Text>
+              <Text style={styles.levelUpBonus}>⏱️ Agora tem estrelas de tempo!</Text>
+              <Text style={styles.levelUpWarning}>🚫 Campos de asteróides perdem 2s!</Text>
             </>
           )}
           <TouchableOpacity style={styles.continueButton} onPress={onContinue}>
-            <Text style={styles.continueButtonText}>Continuar</Text>
+            <Text style={styles.continueButtonText}>Continuar Exploração</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -103,8 +209,9 @@ const generateRandomPosition = (size) => {
 
 export default function App() {
   // Estados do jogo
-  const [gameStarted, setGameStarted] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
+  const [gameState, setGameState] = useState('menu');
+  const [gameMode, setGameMode] = useState('infinite');
+  const [initialLevel, setInitialLevel] = useState(1);
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(BASE_TIME_LIMIT);
@@ -112,7 +219,7 @@ export default function App() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [borderPenaltyCooldown, setBorderPenaltyCooldown] = useState(false);
   
-  // Novos estados para as mecânicas especiais
+  // Estados para os elementos especiais
   const [enemyOrbs, setEnemyOrbs] = useState([]);
   const [timeOrbs, setTimeOrbs] = useState([]);
   
@@ -122,20 +229,20 @@ export default function App() {
   const [orbPosition, setOrbPosition] = useState(generateRandomPosition(BASE_ORB_SIZE));
 
   // Calcular tamanhos baseado no nível
-  const playerSize = Math.max(BASE_PLAYER_SIZE - (level * 2), 20);
-  const orbSize = Math.max(BASE_ORB_SIZE - (level * 1.5), 15);
+  const playerSize = Math.max(BASE_PLAYER_SIZE - (level * 2), 40);
+  const orbSize = Math.max(BASE_ORB_SIZE - (level * 1.5), 25);
   const timeLimit = Math.max(BASE_TIME_LIMIT - (level * 2), 10);
   const orbsNeeded = ORBS_PER_LEVEL + level;
 
-  // Efeito para inimigos (nível 5+)
+  // Efeitos para geração de elementos (mantidos iguais)
   useEffect(() => {
-    if (gameStarted && !gameOver && level >= 5) {
+    if (gameState === 'playing' && level >= 5) {
       const enemyInterval = setInterval(() => {
         if (enemyOrbs.length < Math.min(level - 3, 5)) {
           const newEnemy = {
             id: Date.now() + Math.random(),
-            ...generateRandomPosition(20),
-            size: 20,
+            ...generateRandomPosition(35),
+            size: 35,
           };
           setEnemyOrbs(prev => [...prev, newEnemy]);
         }
@@ -143,17 +250,16 @@ export default function App() {
 
       return () => clearInterval(enemyInterval);
     }
-  }, [gameStarted, gameOver, level, enemyOrbs.length]);
+  }, [gameState, level, enemyOrbs.length]);
 
-  // Efeito para orbes de tempo (nível 8+)
   useEffect(() => {
-    if (gameStarted && !gameOver && level >= 8) {
+    if (gameState === 'playing' && level >= 8) {
       const timeOrbInterval = setInterval(() => {
         if (timeOrbs.length < 2) {
           const newTimeOrb = {
             id: Date.now() + Math.random(),
-            ...generateRandomPosition(25),
-            size: 25,
+            ...generateRandomPosition(30),
+            size: 30,
           };
           setTimeOrbs(prev => [...prev, newTimeOrb]);
         }
@@ -161,11 +267,11 @@ export default function App() {
 
       return () => clearInterval(timeOrbInterval);
     }
-  }, [gameStarted, gameOver, level, timeOrbs.length]);
+  }, [gameState, level, timeOrbs.length]);
 
-  // Efeito para movimento dos inimigos
+  // Efeitos para movimento (mantidos iguais)
   useEffect(() => {
-    if (gameStarted && !gameOver && level >= 5) {
+    if (gameState === 'playing' && level >= 5) {
       const moveInterval = setInterval(() => {
         setEnemyOrbs(prev => 
           prev.map(enemy => ({
@@ -177,11 +283,10 @@ export default function App() {
 
       return () => clearInterval(moveInterval);
     }
-  }, [gameStarted, gameOver, level]);
+  }, [gameState, level]);
 
-  // Efeito para movimento dos orbes de tempo
   useEffect(() => {
-    if (gameStarted && !gameOver && level >= 8) {
+    if (gameState === 'playing' && level >= 8) {
       const moveInterval = setInterval(() => {
         setTimeOrbs(prev => 
           prev.map(orb => ({
@@ -193,75 +298,64 @@ export default function App() {
 
       return () => clearInterval(moveInterval);
     }
-  }, [gameStarted, gameOver, level]);
+  }, [gameState, level]);
 
-  // Cooldown para penalidade de borda
+  // Resto dos efeitos (mantidos iguais)
   useEffect(() => {
     if (borderPenaltyCooldown) {
       const cooldownTimer = setTimeout(() => {
         setBorderPenaltyCooldown(false);
-      }, 1000); // 1 segundo de cooldown entre penalidades
-
+      }, 1000);
       return () => clearTimeout(cooldownTimer);
     }
   }, [borderPenaltyCooldown]);
 
   useEffect(() => {
-    if (gameStarted && !gameOver) {
+    if (gameState === 'playing') {
       Gyroscope.setUpdateInterval(16);
-
       const subscription = Gyroscope.addListener(gyroscopeData => {
         setData(gyroscopeData);
       });
-
       return () => subscription.remove();
     }
-  }, [gameStarted, gameOver]);
+  }, [gameState]);
 
   useEffect(() => {
-    if (gameStarted && !gameOver) {
+    if (gameState === 'playing') {
       let newX = playerPosition.x - data.y * 10;
       let newY = playerPosition.y - data.x * 10;
 
       let hitBorder = false;
 
-      // Verifica se encostou na borda esquerda
       if (newX <= 0) {
         newX = 0;
         hitBorder = true;
       }
-      // Verifica se encostou na borda direita
       if (newX >= width - playerSize) {
         newX = width - playerSize;
         hitBorder = true;
       }
-      // Verifica se encostou na borda superior
       if (newY <= 0) {
         newY = 0;
         hitBorder = true;
       }
-      // Verifica se encostou na borda inferior
       if (newY >= height - playerSize) {
         newY = height - playerSize;
         hitBorder = true;
       }
 
-      // Aplica penalidade de tempo se encostou na borda (nível 8+)
       if (hitBorder && level >= 8 && !borderPenaltyCooldown && !showLevelUp) {
         setTimeLeft(prev => Math.max(prev - 2, 0));
         setBorderPenaltyCooldown(true);
-        
-        // Feedback visual - piscar a tela ou borda
-        // Você pode adicionar um efeito visual aqui se quiser
       }
 
       setPlayerPosition({ x: newX, y: newY });
     }
-  }, [data, gameStarted, gameOver, playerSize, level, borderPenaltyCooldown, showLevelUp]);
+  }, [data, gameState, playerSize, level, borderPenaltyCooldown, showLevelUp]);
 
-  // Detecção de colisão com orbe normal
+  // Detecção de colisões (mantidas iguais)
   useEffect(() => {
-    if (gameStarted && !gameOver) {
+    if (gameState === 'playing') {
       const playerCenterX = playerPosition.x + playerSize / 2;
       const playerCenterY = playerPosition.y + playerSize / 2;
       const orbCenterX = orbPosition.x + orbSize / 2;
@@ -289,11 +383,10 @@ export default function App() {
         setOrbPosition(generateRandomPosition(orbSize));
       }
     }
-  }, [playerPosition, gameStarted, gameOver]);
+  }, [playerPosition, gameState]);
 
-  // Detecção de colisão com inimigos (nível 5+)
   useEffect(() => {
-    if (gameStarted && !gameOver && level >= 5) {
+    if (gameState === 'playing' && level >= 5) {
       const playerCenterX = playerPosition.x + playerSize / 2;
       const playerCenterY = playerPosition.y + playerSize / 2;
 
@@ -306,15 +399,14 @@ export default function App() {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < (playerSize / 2) + (enemy.size / 2)) {
-          setGameOver(true);
+          setGameState('gameOver');
         }
       });
     }
-  }, [playerPosition, enemyOrbs, gameStarted, gameOver, level, playerSize]);
+  }, [playerPosition, enemyOrbs, gameState, level, playerSize]);
 
-  // Detecção de colisão com orbes de tempo (nível 8+)
   useEffect(() => {
-    if (gameStarted && !gameOver && level >= 8) {
+    if (gameState === 'playing' && level >= 8) {
       const playerCenterX = playerPosition.x + playerSize / 2;
       const playerCenterY = playerPosition.y + playerSize / 2;
 
@@ -333,16 +425,16 @@ export default function App() {
         }
       });
     }
-  }, [playerPosition, timeOrbs, gameStarted, gameOver, level, playerSize]);
+  }, [playerPosition, timeOrbs, gameState, level, playerSize]);
 
   // Timer do jogo
   useEffect(() => {
     let timer;
-    if (gameStarted && !gameOver && timeLeft > 0 && !showLevelUp) {
+    if (gameState === 'playing' && timeLeft > 0 && !showLevelUp) {
       timer = setInterval(() => {
         setTimeLeft(prevTime => {
           if (prevTime <= 1) {
-            setGameOver(true);
+            setGameState('gameOver');
             return 0;
           }
           return prevTime - 1;
@@ -353,14 +445,15 @@ export default function App() {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [gameStarted, gameOver, timeLeft, showLevelUp]);
+  }, [gameState, timeLeft, showLevelUp]);
 
-  const startGame = () => {
-    setGameStarted(true);
-    setGameOver(false);
-    setLevel(1);
+  const startGame = (mode, startLevel = 1) => {
+    setGameMode(mode);
+    setInitialLevel(startLevel);
+    setLevel(startLevel);
+    setGameState('playing');
     setScore(0);
-    setTimeLeft(BASE_TIME_LIMIT);
+    setTimeLeft(BASE_TIME_LIMIT - ((startLevel - 1) * 2));
     setOrbsCollected(0);
     setEnemyOrbs([]);
     setTimeOrbs([]);
@@ -370,7 +463,11 @@ export default function App() {
   };
 
   const restartGame = () => {
-    startGame();
+    startGame(gameMode, initialLevel);
+  };
+
+  const returnToMenu = () => {
+    setGameState('menu');
   };
 
   const continueToNextLevel = () => {
@@ -379,13 +476,18 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <StartScreen onStart={startGame} isVisible={!gameStarted && !gameOver} />
+      <GameModeScreen 
+        onStart={startGame} 
+        isVisible={gameState === 'menu'} 
+      />
       
       <GameOverScreen 
         score={score} 
         level={level} 
-        onRestart={restartGame} 
-        isVisible={gameOver} 
+        onRestart={restartGame}
+        onMenu={returnToMenu}
+        isVisible={gameState === 'gameOver'} 
+        gameMode={gameMode}
       />
 
       <LevelUpScreen 
@@ -394,87 +496,93 @@ export default function App() {
         isVisible={showLevelUp} 
       />
 
-      {gameStarted && !gameOver && !showLevelUp && (
+      {gameState === 'playing' && !showLevelUp && (
         <>
-          {/* Header com informações do jogo */}
           <View style={styles.header}>
-            <Text style={styles.headerText}>Nível: {level}</Text>
-            <Text style={styles.headerText}>Tempo: {timeLeft}s</Text>
-            <Text style={styles.headerText}>Orbes: {orbsCollected}/{orbsNeeded}</Text>
-            <Text style={styles.headerText}>Pontos: {score}</Text>
+            <Text style={styles.headerText}>🪐 Setor: {level}</Text>
+            <Text style={styles.headerText}>⏱️ {timeLeft}s</Text>
+            <Text style={styles.headerText}>⚡ {orbsCollected}/{orbsNeeded}</Text>
+            <Text style={styles.headerText}>🌟 {score}</Text>
+            <Text style={styles.headerText}>
+              {gameMode === 'infinite' ? '🚀 Infinito' : `🪐 Setor ${initialLevel}`}
+            </Text>
           </View>
 
-          {/* Feedback de penalidade de borda */}
           {level >= 8 && borderPenaltyCooldown && (
             <View style={styles.penaltyFeedback}>
-              <Text style={styles.penaltyText}>-2s!</Text>
+              <Text style={styles.penaltyText}>⚡ Campo de Asteróides! -2s</Text>
             </View>
           )}
 
-          {/* Orbe normal (azul) */}
-          <View
+          {/* Orbe de energia (azul) */}
+          <Image
+            source={images.orbe}
             style={[
-              styles.orb,
+              styles.orbImage,
               {
                 width: orbSize,
                 height: orbSize,
-                borderRadius: orbSize / 2,
                 left: orbPosition.x,
                 top: orbPosition.y,
               },
             ]}
+            resizeMode="contain"
           />
           
-          {/* Inimigos (roxos) - Nível 5+ */}
+          {/* Meteoros (inimigos) - Nível 5+ */}
           {level >= 5 && enemyOrbs.map(enemy => (
-            <View
+            <Image
               key={enemy.id}
+              source={images.meteoro}
               style={[
-                styles.enemyOrb,
+                styles.orbImage,
                 {
                   width: enemy.size,
                   height: enemy.size,
-                  borderRadius: enemy.size / 2,
                   left: enemy.x,
                   top: enemy.y,
                 },
               ]}
+              resizeMode="contain"
             />
           ))}
 
-          {/* Orbes de tempo (dourados) - Nível 8+ */}
+          {/* Estrelas de tempo - Nível 8+ */}
           {level >= 8 && timeOrbs.map(timeOrb => (
-            <View
+            <Image
               key={timeOrb.id}
+              source={images.star}
               style={[
-                styles.timeOrb,
+                styles.orbImage,
                 {
                   width: timeOrb.size,
                   height: timeOrb.size,
-                  borderRadius: timeOrb.size / 2,
                   left: timeOrb.x,
                   top: timeOrb.y,
                 },
               ]}
+              resizeMode="contain"
             />
           ))}
           
-          {/* Player */}
-          <View
+          {/* Nave do jogador */}
+          <Image
+            source={images.nave}
             style={[
-              styles.player,
+              styles.playerImage,
               {
                 width: playerSize,
                 height: playerSize,
-                borderRadius: playerSize / 2,
                 left: playerPosition.x,
                 top: playerPosition.y,
-                borderColor: level >= 8 && borderPenaltyCooldown ? '#e74c3c' : '#fff',
+                transform: [
+                  { rotate: `${data.x * 10}deg` }
+                ],
               },
             ]}
+            resizeMode="contain"
           />
 
-          {/* Barra de progresso dos orbes */}
           <View style={styles.progressContainer}>
             <View 
               style={[
@@ -484,16 +592,22 @@ export default function App() {
             />
           </View>
 
-          {/* Legenda dos elementos */}
           <View style={styles.legend}>
+            <View style={styles.legendItemSmall}>
+              <Image source={images.orbe} style={styles.legendIconSmall} />
+              <Text style={styles.legendTextSmall}>= Energia</Text>
+            </View>
             {level >= 5 && (
-              <Text style={styles.legendText}>💜 = Perde | </Text>
+              <View style={styles.legendItemSmall}>
+                <Image source={images.meteoro} style={styles.legendIconSmall} />
+                <Text style={styles.legendTextSmall}>= Meteoro</Text>
+              </View>
             )}
             {level >= 8 && (
-              <Text style={styles.legendText}>⭐ = +5s | </Text>
-            )}
-            {level >= 8 && (
-              <Text style={styles.legendText}>🚫 = -2s nas bordas</Text>
+              <View style={styles.legendItemSmall}>
+                <Image source={images.star} style={styles.legendIconSmall} />
+                <Text style={styles.legendTextSmall}>= +5s</Text>
+              </View>
             )}
           </View>
         </>
@@ -505,140 +619,261 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2c3e50',
+    backgroundColor: '#0a0a2a', // Fundo azul escuro espacial
   },
-  // Estilos da tela de início
-  startContainer: {
+  // Estilos da tela de seleção de modo
+  modeContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(10, 10, 42, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  startContent: {
-    backgroundColor: '#34495e',
-    padding: 30,
-    borderRadius: 15,
+  modeContent: {
+    backgroundColor: 'rgba(25, 25, 65, 0.9)',
+    padding: 25,
+    borderRadius: 20,
     alignItems: 'center',
     margin: 20,
+    minWidth: '80%',
+    borderWidth: 2,
+    borderColor: '#4a4a8a',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#8be9fd',
+    marginTop: 20,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  modeButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 10,
+  },
+  modeButton: {
+    flex: 1,
+    backgroundColor: '#1e1e4a',
+    padding: 15,
+    borderRadius: 12,
+    marginHorizontal: 5,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4a4a8a',
+  },
+  modeButtonSelected: {
+    backgroundColor: '#6272a4',
+    borderColor: '#bd93f9',
+  },
+  modeButtonText: {
+    color: '#bd93f9',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modeButtonTextSelected: {
+    color: '#f8f8f2',
+  },
+  levelButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 10,
+  },
+  levelButton: {
+    flex: 1,
+    backgroundColor: '#1e1e4a',
+    padding: 12,
+    borderRadius: 10,
+    marginHorizontal: 3,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4a4a8a',
+  },
+  levelButtonSelected: {
+    backgroundColor: '#ffb86c',
+    borderColor: '#ff79c6',
+  },
+  levelButtonText: {
+    color: '#50fa7b',
+    fontWeight: 'bold',
+  },
+  levelButtonTextSelected: {
+    color: '#1e1e4a',
+  },
+  modeInfo: {
+    backgroundColor: 'rgba(30, 30, 74, 0.8)',
+    padding: 15,
+    borderRadius: 12,
+    marginVertical: 15,
+    width: '100%',
+    borderLeftWidth: 4,
+    borderLeftColor: '#50fa7b',
+  },
+  modeInfoText: {
+    color: '#f8f8f2',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  legendIcons: {
+    width: '100%',
+    marginVertical: 15,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+    padding: 8,
+    backgroundColor: 'rgba(30, 30, 74, 0.6)',
+    borderRadius: 8,
+  },
+  legendIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+  },
+  legendText: {
+    color: '#f8f8f2',
+    fontSize: 14,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 10,
+    color: '#8be9fd',
+    marginBottom: 5,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#ecf0f1',
+    color: '#bd93f9',
     textAlign: 'center',
     marginBottom: 20,
-  },
-  instructions: {
-    fontSize: 14,
-    color: '#bdc3c7',
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 20,
+    fontStyle: 'italic',
   },
   startButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: '#6272a4',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 25,
+    marginTop: 10,
+    borderWidth: 2,
+    borderColor: '#bd93f9',
   },
   startButtonText: {
-    color: '#fff',
+    color: '#f8f8f2',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  // Estilos do game over
   gameOverContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(10, 10, 42, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   gameOverContent: {
-    backgroundColor: '#34495e',
+    backgroundColor: 'rgba(25, 25, 65, 0.9)',
     padding: 30,
-    borderRadius: 15,
+    borderRadius: 20,
     alignItems: 'center',
     margin: 20,
+    borderWidth: 2,
+    borderColor: '#4a4a8a',
   },
   gameOverTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#e74c3c',
+    color: '#ff79c6',
     marginBottom: 20,
   },
   gameOverText: {
     fontSize: 18,
-    color: '#ecf0f1',
+    color: '#8be9fd',
     marginBottom: 10,
   },
+  gameOverSubtext: {
+    fontSize: 16,
+    color: '#bd93f9',
+    marginBottom: 20,
+    fontStyle: 'italic',
+  },
+  gameOverButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   restartButton: {
-    backgroundColor: '#3498db',
+    flex: 1,
+    backgroundColor: '#6272a4',
     paddingVertical: 15,
-    paddingHorizontal: 30,
+    paddingHorizontal: 15,
     borderRadius: 25,
-    marginTop: 20,
+    marginHorizontal: 5,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#bd93f9',
+  },
+  menuButton: {
+    backgroundColor: '#ffb86c',
+    borderColor: '#ff79c6',
   },
   restartButtonText: {
-    color: '#fff',
-    fontSize: 18,
+    color: '#f8f8f2',
+    fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
-  // Estilos da tela de comemoração
   levelUpContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(10, 10, 42, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   levelUpContent: {
-    backgroundColor: '#27ae60',
+    backgroundColor: 'rgba(86, 61, 124, 0.9)',
     padding: 30,
-    borderRadius: 15,
+    borderRadius: 20,
     alignItems: 'center',
     margin: 20,
+    borderWidth: 2,
+    borderColor: '#bd93f9',
   },
   levelUpTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#f8f8f2',
     marginBottom: 10,
   },
   levelUpText: {
     fontSize: 18,
-    color: '#ecf0f1',
+    color: '#8be9fd',
     marginBottom: 10,
   },
   levelUpWarning: {
     fontSize: 16,
-    color: '#e74c3c',
+    color: '#ff5555',
     fontWeight: 'bold',
     marginBottom: 5,
     textAlign: 'center',
   },
   levelUpBonus: {
     fontSize: 16,
-    color: '#f1c40f',
+    color: '#f1fa8c',
     fontWeight: 'bold',
     marginBottom: 5,
     textAlign: 'center',
   },
   continueButton: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: '#50fa7b',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 25,
+    marginTop: 10,
   },
   continueButtonText: {
-    color: '#fff',
+    color: '#1e1e4a',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  // Estilos do jogo
   header: {
     position: 'absolute',
     top: 40,
@@ -646,12 +881,19 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
+    flexWrap: 'wrap',
+    backgroundColor: 'rgba(30, 30, 74, 0.8)',
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: '#4a4a8a',
   },
   headerText: {
-    color: '#fff',
-    fontSize: 14,
+    color: '#8be9fd',
+    fontSize: 12,
     fontWeight: 'bold',
+    marginHorizontal: 2,
+    marginVertical: 2,
   },
   penaltyFeedback: {
     position: 'absolute',
@@ -661,51 +903,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   penaltyText: {
-    color: '#e74c3c',
-    fontSize: 18,
+    color: '#ff5555',
+    fontSize: 16,
     fontWeight: 'bold',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    backgroundColor: 'rgba(30, 30, 74, 0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ff5555',
   },
-  player: {
+
+  playerImage: {
     position: 'absolute',
-    backgroundColor: 'coral',
-    borderWidth: 2,
   },
-  orb: {
+  orbImage: {
     position: 'absolute',
-    backgroundColor: '#3498db',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  enemyOrb: {
-    position: 'absolute',
-    backgroundColor: '#9b59b6',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  timeOrb: {
-    position: 'absolute',
-    backgroundColor: '#f1c40f',
-    borderWidth: 2,
-    borderColor: '#fff',
   },
   progressContainer: {
     position: 'absolute',
     bottom: 30,
     left: 20,
     right: 20,
-    height: 10,
-    backgroundColor: '#34495e',
-    borderRadius: 5,
+    height: 12,
+    backgroundColor: 'rgba(30, 30, 74, 0.8)',
+    borderRadius: 6,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#4a4a8a',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#3498db',
-    borderRadius: 5,
+    backgroundColor: '#50fa7b',
+    borderRadius: 6,
   },
   legend: {
     position: 'absolute',
@@ -715,11 +945,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
+    paddingHorizontal: 10,
   },
-  legendText: {
-    color: '#fff',
-    fontSize: 12,
+  legendItemSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    marginVertical: 2,
+    padding: 5,
+    backgroundColor: 'rgba(30, 30, 74, 0.7)',
+    borderRadius: 6,
+  },
+  legendIconSmall: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  legendTextSmall: {
+    color: '#f8f8f2',
+    fontSize: 10,
     fontWeight: 'bold',
-    marginHorizontal: 2,
   },
 });
